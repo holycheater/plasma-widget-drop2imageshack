@@ -1,0 +1,8 @@
+[Global]
+IconName=image-loading
+Comment=drop2imageshack plasmoid
+Name=Drop To Imageshack
+
+[Event/image-link]
+Name=Image link
+Action=Popup
