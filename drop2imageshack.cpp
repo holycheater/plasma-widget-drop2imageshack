@@ -146,6 +146,8 @@ void PlasmaIS::dropEvent(QGraphicsSceneDragDropEvent *e)
 
 void PlasmaIS::upload(const QString& f)
 {
+    // TODO: upload in separate thread.
+
     struct curl_httppost *post = NULL;
     struct curl_httppost *last = NULL;
     curl_formadd(&post, &last,
@@ -168,14 +170,14 @@ void PlasmaIS::upload(const QString& f)
     CURLcode c = curl_easy_perform(h);
     curl_formfree(post);
 
-    if ( c != CURLE_OK ) {
+    if ( c == CURLE_OK ) {
+        if ( !m_url.isEmpty() ) {
+            notify( QString("Upload success: %1").arg(m_url)+QString(QChar::ParagraphSeparator)+QString("URL was copied to clipboard") );
+            QApplication::clipboard()->setText(m_url);
+            m_url.clear();
+        }
+    } else {
         notify("Curl error occured");
-    }
-
-    if ( !m_url.isEmpty() ) {
-        notify( QString("Upload success: %1\nURL was copied to clipboard").arg(m_url) );
-        QApplication::clipboard()->setText(m_url);
-        m_url.clear();
     }
 
     curl_easy_cleanup(h);
