@@ -1,0 +1,5 @@
+Plasma widget for pushing images to imageshack.us
+
+Dependencies:
+scrot (screenshot utility)
+libcurl
