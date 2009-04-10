@@ -49,13 +49,11 @@ static bool is_valid_file(const QString& f)
     QStringList acceptable;
     acceptable << "jpg" << "jpeg" << "png" << "bmp" << "tiff" << "tif";
     if ( !acceptable.contains(f.split(".").last().toLower()) ) {
-        qDebug("file %s is not accept\able", qPrintable(f));
         return false;
     }
     if ( !QFile::exists(f) ) {
         return false;
     }
-    notify( QString("%1 is valid file").arg(f) );
     return true;
 }
 
@@ -87,6 +85,7 @@ PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
 {
     m_svg = new Plasma::Svg(this);
     m_icon = new Plasma::IconWidget("", this);
+    m_icon->setToolTip("Drop an image or click this icon to upload");
 
     curl_global_init(0);
 }
@@ -164,9 +163,6 @@ void PlasmaIS::upload(const QString& f)
     curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, cb_write);
     curl_easy_setopt(h, CURLOPT_WRITEDATA, this);
 
-    // for debugging purposes
-    curl_easy_setopt(h, CURLOPT_VERBOSE, 1);
-
     CURLcode c = curl_easy_perform(h);
     curl_formfree(post);
 
@@ -177,7 +173,7 @@ void PlasmaIS::upload(const QString& f)
             m_url.clear();
         }
     } else {
-        notify("Curl error occured");
+        notify( QString("cURL error: %1").arg(curl_easy_strerror(c)) );
     }
 
     curl_easy_cleanup(h);
