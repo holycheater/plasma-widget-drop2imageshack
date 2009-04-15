@@ -27,6 +27,7 @@ namespace Plasma {
     class Svg;
     class IconWidget;
 }
+class ImageUploader;
 
 class PlasmaIS : public Plasma::Applet
 {
@@ -45,10 +46,16 @@ class PlasmaIS : public Plasma::Applet
         void upload(const QString& f);
     private slots:
         void slotScreenshot();
+
+        void slotCurlError(const QString& errDesc);
+        void slotImageUploaded(const QString& url);
+        void slotUploaderFinished();
     private:
         Plasma::Svg *m_svg;
         Plasma::IconWidget *m_icon;
-        QString m_url;
+        ImageUploader *m_uploader;
+
+        QString m_tmpscr;
 };
 
 K_EXPORT_PLASMA_APPLET(drop2imageshack, PlasmaIS);

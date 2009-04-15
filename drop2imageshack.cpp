@@ -19,6 +19,7 @@
  */
 
 #include "drop2imageshack.h"
+#include "imageuploader.h"
 
 #include <KIcon>
 #include <KNotification>
@@ -28,12 +29,9 @@
 #include <QClipboard>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneDragDropEvent>
-#include <QRegExp>
 #include <QStringList>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <curl/curl.h>
 
 #include <QFile>
 
@@ -57,29 +55,6 @@ static bool is_valid_file(const QString& f)
     return true;
 }
 
-static size_t cb_write(void *ptr, size_t size, size_t nmemb, void *plasmoid)
-{
-    PlasmaIS *p = static_cast<PlasmaIS*>(plasmoid);
-
-    size_t sz = size*nmemb+1;
-    char *xml = new char[sz];
-    qMemSet(xml, 0, sz);
-    qMemCopy(xml, ptr, sz-1);
-
-    QString s(xml);
-
-    delete[] xml;
-
-    QRegExp rx("<image_link>(.*)</image_link>");
-    int pos = rx.indexIn(s);
-    if ( pos >= 0 ) {
-        QString value = rx.cap(1);
-        qDebug("url is: %s", qPrintable(value));
-        p->setLastUrl(value);
-    }
-    return size*nmemb;
-}
-
 PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
     : Plasma::Applet(parent, args)
 {
@@ -87,12 +62,11 @@ PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
     m_icon = new Plasma::IconWidget("", this);
     m_icon->setToolTip("Drop an image or click this icon to upload");
 
-    curl_global_init(0);
+    m_uploader = 0;
 }
 
 PlasmaIS::~PlasmaIS()
 {
-    curl_global_cleanup();
     delete m_icon;
     delete m_svg;
 }
@@ -118,11 +92,6 @@ void PlasmaIS::init()
     connect( m_icon, SIGNAL(clicked()), SLOT(slotScreenshot()) );
 }
 
-void PlasmaIS::setLastUrl(const QString& url)
-{
-    m_url = url;
-}
-
 void PlasmaIS::dragEnterEvent(QGraphicsSceneDragDropEvent *e)
 {
     if ( e->mimeData()->hasFormat("text/plain") ) {
@@ -145,50 +114,63 @@ void PlasmaIS::dropEvent(QGraphicsSceneDragDropEvent *e)
 
 void PlasmaIS::upload(const QString& f)
 {
-    // TODO: upload in separate thread.
-
-    struct curl_httppost *post = NULL;
-    struct curl_httppost *last = NULL;
-    curl_formadd(&post, &last,
-                 CURLFORM_COPYNAME, "fileupload",
-                 CURLFORM_FILE, f.toLocal8Bit().constData(), CURLFORM_END);
-    curl_formadd(&post, &last,
-                 CURLFORM_COPYNAME, "xml",
-                 CURLFORM_COPYCONTENTS, "yes", CURLFORM_END);
-
-    CURL *h = curl_easy_init();
-    curl_easy_setopt(h, CURLOPT_URL, "http://www.imageshack.us/index.php");
-    curl_easy_setopt(h, CURLOPT_POST, 1);
-    curl_easy_setopt(h, CURLOPT_HTTPPOST, post);
-    curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, cb_write);
-    curl_easy_setopt(h, CURLOPT_WRITEDATA, this);
-
-    CURLcode c = curl_easy_perform(h);
-    curl_formfree(post);
-
-    if ( c == CURLE_OK ) {
-        if ( !m_url.isEmpty() ) {
-            notify( QString("Upload success: %1").arg(m_url)+QString(QChar::ParagraphSeparator)+QString("URL was copied to clipboard") );
-            QApplication::clipboard()->setText(m_url);
-            m_url.clear();
-        }
-    } else {
-        notify( QString("cURL error: %1").arg(curl_easy_strerror(c)) );
+    if ( m_uploader ) {
+        return;
     }
+    m_uploader = new ImageUploader;
 
-    curl_easy_cleanup(h);
+    QObject::connect( m_uploader, SIGNAL(curlError(QString)),
+                      SLOT(slotCurlError(QString)) );
+    QObject::connect( m_uploader, SIGNAL(imageUploaded(QString)),
+                      SLOT(slotImageUploaded(QString)) );
+    QObject::connect( m_uploader, SIGNAL(finished()),
+                      SLOT(deleteLater()) );
+
+    m_uploader->setUploadFile(f);
+    m_uploader->start();
 }
 
 void PlasmaIS::slotScreenshot()
 {
     // TODO: Remove depedency from scrot
 
-    QString f = "/tmp/plasma-drop2imageshack" + QString::number(qrand()) + ".png";
-    qDebug("filename is: %s", qPrintable(f));
+    if ( m_uploader ) {
+        return;
+    }
 
-    if ( system( QString("scrot "+f).toLocal8Bit().constData() ) == EXIT_SUCCESS ) {
-        upload(f);
-        remove( f.toLocal8Bit().constData() );
+    m_tmpscr = "/tmp/plasma-drop2imageshack" + QString::number(qrand()) + ".png";
+    qDebug("filename is: %s", qPrintable(m_tmpscr));
+
+    if ( system( QString("scrot "+m_tmpscr).toLocal8Bit().constData() ) == EXIT_SUCCESS ) {
+        upload(m_tmpscr);
+    }
+}
+
+void PlasmaIS::slotCurlError(const QString& errDesc)
+{
+    notify(errDesc);
+}
+
+void PlasmaIS::slotImageUploaded(const QString& url)
+{
+    notify( QString("Upload success: %1").arg(url)+QString(QChar::ParagraphSeparator)+QString("URL was copied to clipboard") );
+    QApplication::clipboard()->setText(url);
+    qDebug() << "is thread finished?" << m_uploader->isFinished();
+    m_uploader->quit();
+    qDebug("quit runned");
+    m_uploader->yieldCurrentThread();
+    qDebug("yield runned");
+}
+
+void PlasmaIS::slotUploaderFinished()
+{
+    qDebug("thread finished: %d", (int)m_uploader->currentThreadId());
+    m_uploader->deleteLater();
+    m_uploader = 0;
+
+    if ( !m_tmpscr.isEmpty() ) {
+        remove( m_tmpscr.toLocal8Bit().constData() );
+        m_tmpscr.clear();
     }
 }
 
