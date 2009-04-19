@@ -40,7 +40,6 @@ static size_t cb_write(void *ptr, size_t size, size_t nmemb, void *plasmoid)
     int pos = rx.indexIn(s);
     if ( pos >= 0 ) {
         QString value = rx.cap(1);
-        qDebug("url is: %s", qPrintable(value));
         p->setImageUrl(value);
     }
     return size*nmemb;
@@ -73,7 +72,6 @@ void ImageUploader::setImageUrl(const QString& url)
 
 void ImageUploader::run()
 {
-    qDebug("upload file: %s", qPrintable(m_file));
     m_url.clear();
 
     struct curl_httppost *post = NULL;
@@ -104,5 +102,4 @@ void ImageUploader::run()
     }
 
     curl_easy_cleanup(h);
-    exec();
 }

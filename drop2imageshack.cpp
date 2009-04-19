@@ -124,7 +124,7 @@ void PlasmaIS::upload(const QString& f)
     QObject::connect( m_uploader, SIGNAL(imageUploaded(QString)),
                       SLOT(slotImageUploaded(QString)) );
     QObject::connect( m_uploader, SIGNAL(finished()),
-                      SLOT(deleteLater()) );
+                      SLOT(slotUploaderFinished()) );
 
     m_uploader->setUploadFile(f);
     m_uploader->start();
@@ -157,16 +157,12 @@ void PlasmaIS::slotImageUploaded(const QString& url)
 {
     notify( QString("Upload success: %1").arg(url)+QString(QChar::ParagraphSeparator)+QString("URL was copied to clipboard") );
     QApplication::clipboard()->setText(url);
-    qDebug() << "is thread finished?" << m_uploader->isFinished();
-    m_uploader->quit();
-    qDebug("quit runned");
-    m_uploader->yieldCurrentThread();
-    qDebug("yield runned");
+    qDebug("upload success");
 }
 
 void PlasmaIS::slotUploaderFinished()
 {
-    qDebug("thread finished: %d", (int)m_uploader->currentThreadId());
+    qDebug("thread finished");
     m_uploader->deleteLater();
     m_uploader = 0;
 
