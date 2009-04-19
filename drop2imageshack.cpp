@@ -139,10 +139,12 @@ void PlasmaIS::slotScreenshot()
     }
 
     m_tmpscr = "/tmp/plasma-drop2imageshack" + QString::number(qrand()) + ".png";
-    qDebug("filename is: %s", qPrintable(m_tmpscr));
 
-    if ( system( QString("scrot "+m_tmpscr).toLocal8Bit().constData() ) == EXIT_SUCCESS ) {
+    int result = system( QString("scrot "+m_tmpscr).toLocal8Bit().constData() );
+    if ( result == EXIT_SUCCESS ) {
         upload(m_tmpscr);
+    } else {
+        notify( QString("Scrot failed with code: %1").arg(QString::number(result)) );
     }
 }
 
