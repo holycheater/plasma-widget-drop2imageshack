@@ -23,23 +23,23 @@
 
 #include <KIcon>
 #include <KNotification>
+#include <KRun>
+#include <KUrl>
 #include <Plasma/Svg>
 #include <Plasma/IconWidget>
 #include <QApplication>
 #include <QClipboard>
+#include <QFile>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneDragDropEvent>
 #include <QStringList>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <QFile>
-
-static void notify(const QString& msg)
+static void notify_error(const QString& msg)
 {
-    KNotification::event("image-link", msg, QPixmap(), 0,
-                         KNotification::CloseOnTimeout,
-                         KComponentData("plasma-drop2imageshack", "plasma-drop2imageshack", KComponentData::SkipMainComponentRegistration));
+    KNotification::event(KNotification::Error, msg, QPixmap(), 0,
+                         KNotification::CloseOnTimeout);
 }
 
 static bool is_valid_file(const QString& f)
@@ -69,6 +69,7 @@ PlasmaIS::~PlasmaIS()
 {
     delete m_icon;
     delete m_svg;
+    delete m_notify;
 }
 
 void PlasmaIS::init()
@@ -90,6 +91,14 @@ void PlasmaIS::init()
     resize( m_icon->size() );
 
     connect( m_icon, SIGNAL(clicked()), SLOT(slotScreenshot()) );
+
+    m_notify = new KNotification("image-link", 0, KNotification::Persistent);
+    m_notify->setActions( QStringList(i18n("Open Browser")) );
+    m_notify->setComponentData( KComponentData("plasma-drop2imageshack",
+                                               "plasma-drop2imageshack",
+                                               KComponentData::SkipMainComponentRegistration) );
+    connect( m_notify, SIGNAL(action1Activated()),
+             SLOT(slotOpenUrl()) );
 }
 
 void PlasmaIS::dragEnterEvent(QGraphicsSceneDragDropEvent *e)
@@ -106,7 +115,7 @@ void PlasmaIS::dropEvent(QGraphicsSceneDragDropEvent *e)
     QString addr = e->mimeData()->text();
     addr.replace("file://", "");
     if ( !is_valid_file(addr) ) {
-        notify("Invalid image file");
+        notify_error( i18n("'%1' is invalid image file").arg(addr) );
         return;
     }
     upload(addr);
@@ -144,25 +153,27 @@ void PlasmaIS::slotScreenshot()
     if ( result == EXIT_SUCCESS ) {
         upload(m_tmpscr);
     } else {
-        notify( QString("Scrot failed with code: %1").arg(QString::number(result)) );
+        notify_error( i18n("scrot failed with code: %1").arg(QString::number(result)) );
     }
 }
 
 void PlasmaIS::slotCurlError(const QString& errDesc)
 {
-    notify(errDesc);
+    notify_error(errDesc);
 }
 
 void PlasmaIS::slotImageUploaded(const QString& url)
 {
-    notify( QString("Upload success: %1").arg(url)+QString(QChar::ParagraphSeparator)+QString("URL was copied to clipboard") );
     QApplication::clipboard()->setText(url);
-    qDebug("upload success");
+    m_lasturl = url;
+    m_notify->setText( i18n("Upload success: %1").arg(url) +
+                       QString(QChar::ParagraphSeparator) +
+                       i18n("URL was copied to clipboard") );
+    m_notify->sendEvent();
 }
 
 void PlasmaIS::slotUploaderFinished()
 {
-    qDebug("thread finished");
     m_uploader->deleteLater();
     m_uploader = 0;
 
@@ -170,6 +181,11 @@ void PlasmaIS::slotUploaderFinished()
         remove( m_tmpscr.toLocal8Bit().constData() );
         m_tmpscr.clear();
     }
+}
+
+void PlasmaIS::slotOpenUrl()
+{
+    new KRun(KUrl(m_lasturl), 0);
 }
 
 #include "drop2imageshack.moc"

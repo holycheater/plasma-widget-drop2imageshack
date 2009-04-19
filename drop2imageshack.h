@@ -28,6 +28,7 @@ namespace Plasma {
     class IconWidget;
 }
 class ImageUploader;
+class KNotification;
 
 class PlasmaIS : public Plasma::Applet
 {
@@ -50,12 +51,16 @@ class PlasmaIS : public Plasma::Applet
         void slotCurlError(const QString& errDesc);
         void slotImageUploaded(const QString& url);
         void slotUploaderFinished();
+
+        void slotOpenUrl();
     private:
         Plasma::Svg *m_svg;
         Plasma::IconWidget *m_icon;
         ImageUploader *m_uploader;
+        KNotification *m_notify;
 
         QString m_tmpscr;
+        QString m_lasturl;
 };
 
 K_EXPORT_PLASMA_APPLET(drop2imageshack, PlasmaIS);

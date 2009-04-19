@@ -13,7 +13,7 @@ set(drop2imageshack_SRCS drop2imageshack.cpp imageuploader.cpp)
 #kde4_add_ui_files(drop2imageshack_SRCS settings.ui theme.ui)
 kde4_add_plugin(plasma_applet_drop2imageshack ${drop2imageshack_SRCS})
 target_link_libraries(plasma_applet_drop2imageshack
-    ${KDE4_PLASMA_LIBS} ${KDE4_KDEUI_LIBS} ${CURL_LIBRARY})
+    ${KDE4_PLASMA_LIBS} ${KDE4_KDEUI_LIBS} ${KDE4_KIO_LIBS} ${CURL_LIBRARY})
 
 install(TARGETS plasma_applet_drop2imageshack
     DESTINATION ${PLUGIN_INSTALL_DIR})
