@@ -63,6 +63,7 @@ PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
     m_icon->setToolTip("Drop an image or click this icon to upload");
 
     m_uploader = 0;
+    m_notify = 0;
 }
 
 PlasmaIS::~PlasmaIS()
@@ -91,14 +92,6 @@ void PlasmaIS::init()
     resize( m_icon->size() );
 
     connect( m_icon, SIGNAL(clicked()), SLOT(slotScreenshot()) );
-
-    m_notify = new KNotification("image-link", 0, KNotification::Persistent);
-    m_notify->setActions( QStringList(i18n("Open Browser")) );
-    m_notify->setComponentData( KComponentData("plasma-drop2imageshack",
-                                               "plasma-drop2imageshack",
-                                               KComponentData::SkipMainComponentRegistration) );
-    connect( m_notify, SIGNAL(action1Activated()),
-             SLOT(slotOpenUrl()) );
 }
 
 void PlasmaIS::dragEnterEvent(QGraphicsSceneDragDropEvent *e)
@@ -166,6 +159,15 @@ void PlasmaIS::slotImageUploaded(const QString& url)
 {
     QApplication::clipboard()->setText(url);
     m_lasturl = url;
+
+    delete m_notify; // FIXME: KDE hides persistent notifications and doesn't clean the memory.
+    m_notify = new KNotification("image-link", 0, KNotification::Persistent);
+    m_notify->setActions( QStringList(i18n("Open Browser")) );
+    m_notify->setComponentData( KComponentData("plasma-drop2imageshack",
+                                               "plasma-drop2imageshack",
+                                               KComponentData::SkipMainComponentRegistration) );
+    connect( m_notify, SIGNAL(action1Activated()),
+             SLOT(slotOpenUrl()) );
     m_notify->setText( i18n("Upload success: %1").arg(url) +
                        QString(QChar::ParagraphSeparator) +
                        i18n("URL was copied to clipboard") );
