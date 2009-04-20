@@ -185,6 +185,8 @@ void PlasmaIS::slotUploaderFinished()
 
 void PlasmaIS::slotOpenUrl()
 {
+    m_notify->close();
+    m_notify = 0;
     new KRun(KUrl(m_lasturl), 0);
 }
 
