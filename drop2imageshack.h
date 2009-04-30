@@ -24,7 +24,6 @@
 #include <Plasma/Applet>
 
 namespace Plasma {
-    class Svg;
     class IconWidget;
 }
 class ImageUploader;
@@ -54,8 +53,8 @@ class PlasmaIS : public Plasma::Applet
 
         void slotOpenUrl();
     private:
-        Plasma::Svg *m_svg;
         Plasma::IconWidget *m_icon;
+
         ImageUploader *m_uploader;
         KNotification *m_notify;
 

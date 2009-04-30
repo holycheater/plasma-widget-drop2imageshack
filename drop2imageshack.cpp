@@ -25,7 +25,6 @@
 #include <KNotification>
 #include <KRun>
 #include <KUrl>
-#include <Plasma/Svg>
 #include <Plasma/IconWidget>
 #include <QApplication>
 #include <QClipboard>
@@ -56,40 +55,36 @@ static bool is_valid_file(const QString& f)
 }
 
 PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
-    : Plasma::Applet(parent, args)
+    : Plasma::Applet(parent, args),
+    m_icon(0),
+    m_uploader(0),
+    m_notify(0)
 {
-    m_svg = new Plasma::Svg(this);
-    m_icon = new Plasma::IconWidget("", this);
-    m_icon->setToolTip("Drop an image or click this icon to upload");
-
-    m_uploader = 0;
-    m_notify = 0;
+    setAcceptDrops(true);
+    setAspectRatioMode(Plasma::ConstrainedSquare);
+    setBackgroundHints(DefaultBackground);
+    setHasConfigurationInterface(false);
+    resize(128, 128);
 }
 
 PlasmaIS::~PlasmaIS()
 {
     delete m_icon;
-    delete m_svg;
     delete m_notify;
+    delete m_uploader;
 }
 
 void PlasmaIS::init()
 {
-    m_svg->setImagePath("widgets/background");
-
-    setHasConfigurationInterface(false);
-    setBackgroundHints(DefaultBackground);
-    setAspectRatioMode(Plasma::ConstrainedSquare);
-
-    setAcceptDrops(true);
+    m_icon = new Plasma::IconWidget( KIcon("image-loading"), QString(), this);
+    m_icon->setToolTip( i18n("Drop an image or click this icon to upload") );
 
     QGraphicsLinearLayout *l = new QGraphicsLinearLayout(this);
     l->setContentsMargins(0, 0, 0, 0);
+    l->setOrientation(Qt::Vertical);
     l->setSpacing(0);
-    l->setOrientation(Qt::Horizontal);
-    m_icon->setIcon( KIcon("image-loading") );
+
     l->addItem(m_icon);
-    resize( m_icon->size() );
 
     connect( m_icon, SIGNAL(clicked()), SLOT(slotScreenshot()) );
 }
@@ -116,7 +111,7 @@ void PlasmaIS::dropEvent(QGraphicsSceneDragDropEvent *e)
 
 void PlasmaIS::upload(const QString& f)
 {
-    if ( m_uploader ) {
+    if ( m_uploader ) { // uploader object exists => already uploading.
         return;
     }
     m_uploader = new ImageUploader;
@@ -136,7 +131,7 @@ void PlasmaIS::slotScreenshot()
 {
     // TODO: Remove depedency from scrot
 
-    if ( m_uploader ) {
+    if ( m_uploader ) { // uploader object exists => already uploading.
         return;
     }
 
