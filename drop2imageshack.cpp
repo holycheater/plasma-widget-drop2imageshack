@@ -28,9 +28,11 @@
 #include <Plasma/IconWidget>
 #include <QApplication>
 #include <QClipboard>
+#include <QDesktopWidget>
 #include <QFile>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneDragDropEvent>
+#include <QPixmap>
 #include <QStringList>
 #include <stdio.h>
 #include <stdlib.h>
@@ -129,19 +131,18 @@ void PlasmaIS::upload(const QString& f)
 
 void PlasmaIS::slotScreenshot()
 {
-    // TODO: Remove depedency from scrot
-
     if ( m_uploader ) { // uploader object exists => already uploading.
         return;
     }
 
     m_tmpscr = "/tmp/plasma-drop2imageshack" + QString::number(qrand()) + ".png";
-
-    int result = system( QString("scrot "+m_tmpscr).toLocal8Bit().constData() );
-    if ( result == EXIT_SUCCESS ) {
+    QPixmap screen = QPixmap::grabWindow( QApplication::desktop()->winId(), 0, 0,
+                                          QApplication::desktop()->width(),
+                                          QApplication::desktop()->height() );
+    if ( screen.save(m_tmpscr) ) {
         upload(m_tmpscr);
     } else {
-        notify_error( i18n("scrot failed with code: %1").arg(QString::number(result)) );
+        notify_error( i18n("Screenshot failed") );
     }
 }
 
