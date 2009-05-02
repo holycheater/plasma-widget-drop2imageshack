@@ -1,3 +1,4 @@
 Make list of uploaded urls (or at least last url) accessible from menu.
 Upload queue on multiple files drop.
+Verbose upload progress (blinky icon, %%, whatever).
 i18n?
