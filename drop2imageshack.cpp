@@ -26,12 +26,14 @@
 #include <KRun>
 #include <KUrl>
 #include <Plasma/IconWidget>
+#include <QAction>
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopWidget>
 #include <QFile>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneDragDropEvent>
+#include <QMenu>
 #include <QPixmap>
 #include <QStringList>
 #include <stdio.h>
@@ -67,10 +69,18 @@ PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
     setBackgroundHints(DefaultBackground);
     setHasConfigurationInterface(false);
     resize(128, 128);
+
+    m_ha = new QAction(i18n("History"), this);
+    m_hm = new QMenu;
+    QObject::connect( m_hm, SIGNAL(triggered(QAction*)),
+                      SLOT(slotHistoryTrigger(QAction*)) );
+    m_ha->setMenu(m_hm);
 }
 
 PlasmaIS::~PlasmaIS()
 {
+    delete m_ha;
+    delete m_hm;
     delete m_icon;
     delete m_notify;
     delete m_uploader;
@@ -89,6 +99,13 @@ void PlasmaIS::init()
     l->addItem(m_icon);
 
     connect( m_icon, SIGNAL(clicked()), SLOT(slotScreenshot()) );
+}
+
+QList<QAction*> PlasmaIS::contextualActions()
+{
+    QList<QAction*> l;
+    l << m_ha;
+    return l;
 }
 
 void PlasmaIS::dragEnterEvent(QGraphicsSceneDragDropEvent *e)
@@ -155,6 +172,7 @@ void PlasmaIS::slotImageUploaded(const QString& url)
 {
     QApplication::clipboard()->setText(url);
     m_lasturl = url;
+    m_hm->addAction(url);
 
     delete m_notify; // FIXME: KDE hides persistent notifications and doesn't clean the memory.
     m_notify = new KNotification("image-link", 0, KNotification::Persistent);
@@ -186,6 +204,11 @@ void PlasmaIS::slotOpenUrl()
     m_notify->close();
     m_notify = 0;
     new KRun(KUrl(m_lasturl), 0);
+}
+
+void PlasmaIS::slotHistoryTrigger(QAction* a)
+{
+    new KRun(KUrl(a->text()), 0);
 }
 
 #include "drop2imageshack.moc"

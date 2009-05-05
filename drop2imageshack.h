@@ -38,7 +38,7 @@ class PlasmaIS : public Plasma::Applet
         ~PlasmaIS();
 
         void init();
-        void setLastUrl(const QString& url);
+        QList<QAction*> contextualActions();
     protected:
         void dragEnterEvent(QGraphicsSceneDragDropEvent *e);
         void dropEvent(QGraphicsSceneDragDropEvent *e);
@@ -52,6 +52,7 @@ class PlasmaIS : public Plasma::Applet
         void slotUploaderFinished();
 
         void slotOpenUrl();
+        void slotHistoryTrigger(QAction* a);
     private:
         Plasma::IconWidget *m_icon;
 
@@ -60,6 +61,8 @@ class PlasmaIS : public Plasma::Applet
 
         QString m_tmpscr;
         QString m_lasturl;
+        QAction* m_ha;
+        QMenu *m_hm;
 };
 
 K_EXPORT_PLASMA_APPLET(drop2imageshack, PlasmaIS);
