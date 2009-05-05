@@ -37,10 +37,12 @@ class ImageUploader : public QThread
         void setUploadFile(const QString& fileName);
 
         void setImageUrl(const QString& url);
+        void setUploadProgress(double percent);
 
         void run();
     signals:
         void curlError(const QString& errDesc);
+        void uploadProgress(double percent);
         void imageUploaded(const QString& url);
     private:
         QString m_file;

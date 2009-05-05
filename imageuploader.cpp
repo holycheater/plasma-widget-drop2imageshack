@@ -45,6 +45,17 @@ static size_t cb_write(void *ptr, size_t size, size_t nmemb, void *plasmoid)
     return size*nmemb;
 }
 
+static int cb_progress(void *clientp, double dltotal, double dlnow,
+                       double ultotal, double ulnow)
+{
+    Q_UNUSED(dltotal);
+    Q_UNUSED(dlnow);
+
+    ImageUploader *p = static_cast<ImageUploader*>(clientp);
+    p->setUploadProgress((ulnow/ultotal)*100);
+    return 0;
+}
+
 ImageUploader::ImageUploader()
 {
     curl_global_init(0);
@@ -70,6 +81,11 @@ void ImageUploader::setImageUrl(const QString& url)
     m_url = url;
 }
 
+void ImageUploader::setUploadProgress(double percent)
+{
+    emit uploadProgress(percent);
+}
+
 void ImageUploader::run()
 {
     m_url.clear();
@@ -89,6 +105,9 @@ void ImageUploader::run()
     curl_easy_setopt(h, CURLOPT_HTTPPOST, post);
     curl_easy_setopt(h, CURLOPT_WRITEFUNCTION, cb_write);
     curl_easy_setopt(h, CURLOPT_WRITEDATA, this);
+    curl_easy_setopt(h, CURLOPT_NOPROGRESS, 0);
+    curl_easy_setopt(h, CURLOPT_PROGRESSFUNCTION, cb_progress);
+    curl_easy_setopt(h, CURLOPT_PROGRESSDATA, this);
 
     CURLcode c = curl_easy_perform(h);
     curl_formfree(post);
