@@ -8,7 +8,8 @@ add_definitions (${QT_DEFINITIONS} ${KDE4_DEFINITIONS})
 include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${KDE4_INCLUDES}
     ${CURL_INCLUDE_DIR})
 
-set(drop2imageshack_SRCS drop2imageshack.cpp imageuploader.cpp)
+set(drop2imageshack_SRCS
+    drop2imageshack.cpp imageuploader.cpp progresslabel.cpp)
 
 #kde4_add_ui_files(drop2imageshack_SRCS settings.ui theme.ui)
 kde4_add_plugin(plasma_applet_drop2imageshack ${drop2imageshack_SRCS})

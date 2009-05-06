@@ -28,6 +28,7 @@ namespace Plasma {
 }
 class ImageUploader;
 class KNotification;
+class ProgressLabel;
 
 class PlasmaIS : public Plasma::Applet
 {
@@ -42,6 +43,7 @@ class PlasmaIS : public Plasma::Applet
     protected:
         void dragEnterEvent(QGraphicsSceneDragDropEvent *e);
         void dropEvent(QGraphicsSceneDragDropEvent *e);
+        void resizeEvent(QGraphicsSceneResizeEvent *e);
     private:
         void upload(const QString& f);
     private slots:
@@ -55,6 +57,7 @@ class PlasmaIS : public Plasma::Applet
         void slotHistoryTrigger(QAction* a);
     private:
         Plasma::IconWidget *m_icon;
+        ProgressLabel *m_label;
 
         ImageUploader *m_uploader;
         KNotification *m_notify;

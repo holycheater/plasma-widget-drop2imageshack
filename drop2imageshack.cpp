@@ -20,6 +20,7 @@
 
 #include "drop2imageshack.h"
 #include "imageuploader.h"
+#include "progresslabel.h"
 
 #include <KIcon>
 #include <KNotification>
@@ -33,6 +34,7 @@
 #include <QFile>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneDragDropEvent>
+#include <QGraphicsSceneResizeEvent>
 #include <QMenu>
 #include <QPixmap>
 #include <QStringList>
@@ -61,6 +63,7 @@ static bool is_valid_file(const QString& f)
 PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
     : Plasma::Applet(parent, args),
     m_icon(0),
+    m_label(0),
     m_uploader(0),
     m_notify(0)
 {
@@ -89,7 +92,11 @@ PlasmaIS::~PlasmaIS()
 void PlasmaIS::init()
 {
     m_icon = new Plasma::IconWidget( KIcon("image-loading"), QString(), this);
+    QObject::connect( m_icon, SIGNAL(clicked()),
+                      SLOT(slotScreenshot()) );
+
     m_icon->setToolTip( i18n("Drop an image or click this icon to upload") );
+    m_icon->setZValue(0);
 
     QGraphicsLinearLayout *l = new QGraphicsLinearLayout(this);
     l->setContentsMargins(0, 0, 0, 0);
@@ -97,8 +104,6 @@ void PlasmaIS::init()
     l->setSpacing(0);
 
     l->addItem(m_icon);
-
-    connect( m_icon, SIGNAL(clicked()), SLOT(slotScreenshot()) );
 }
 
 QList<QAction*> PlasmaIS::contextualActions()
@@ -128,15 +133,27 @@ void PlasmaIS::dropEvent(QGraphicsSceneDragDropEvent *e)
     upload(addr);
 }
 
+void PlasmaIS::resizeEvent(QGraphicsSceneResizeEvent *e)
+{
+    if ( m_label )
+        m_label->resize( e->newSize() );
+    e->accept();
+}
+
 void PlasmaIS::upload(const QString& f)
 {
     if ( m_uploader ) { // uploader object exists => already uploading.
         return;
     }
     m_uploader = new ImageUploader;
+    m_label = new ProgressLabel(this);
+    m_label->resize(size());
+    m_label->setZValue(10);
 
     QObject::connect( m_uploader, SIGNAL(curlError(QString)),
                       SLOT(slotCurlError(QString)) );
+    QObject::connect( m_uploader, SIGNAL(uploadProgress(double)),
+                      m_label, SLOT(setProgress(double)) );
     QObject::connect( m_uploader, SIGNAL(imageUploaded(QString)),
                       SLOT(slotImageUploaded(QString)) );
     QObject::connect( m_uploader, SIGNAL(finished()),
@@ -192,6 +209,9 @@ void PlasmaIS::slotUploaderFinished()
 {
     m_uploader->deleteLater();
     m_uploader = 0;
+
+    delete m_label;
+    m_label = 0;
 
     if ( !m_tmpscr.isEmpty() ) {
         remove( m_tmpscr.toLocal8Bit().constData() );
