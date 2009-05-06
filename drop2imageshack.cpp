@@ -191,7 +191,7 @@ void PlasmaIS::slotImageUploaded(const QString& url)
     QApplication::clipboard()->setText(url);
     m_lasturl = url;
     m_hm->addAction(url);
-    m_hm->setEnabled(true);
+    m_ha->setEnabled(true);
 
     delete m_notify; // FIXME: KDE hides persistent notifications and doesn't clean the memory.
     m_notify = new KNotification("image-link", 0, KNotification::Persistent);
