@@ -138,7 +138,7 @@ void PlasmaIS::resizeEvent(QGraphicsSceneResizeEvent *e)
 {
     if ( m_label )
         m_label->resize( e->newSize() );
-    e->accept();
+    Plasma::Applet::resizeEvent(e);
 }
 
 void PlasmaIS::upload(const QString& f)
