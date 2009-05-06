@@ -74,6 +74,7 @@ PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
     resize(128, 128);
 
     m_ha = new QAction(i18n("History"), this);
+    m_ha->setEnabled(false);
     m_hm = new QMenu;
     QObject::connect( m_hm, SIGNAL(triggered(QAction*)),
                       SLOT(slotHistoryTrigger(QAction*)) );
@@ -190,6 +191,7 @@ void PlasmaIS::slotImageUploaded(const QString& url)
     QApplication::clipboard()->setText(url);
     m_lasturl = url;
     m_hm->addAction(url);
+    m_hm->setEnabled(true);
 
     delete m_notify; // FIXME: KDE hides persistent notifications and doesn't clean the memory.
     m_notify = new KNotification("image-link", 0, KNotification::Persistent);
