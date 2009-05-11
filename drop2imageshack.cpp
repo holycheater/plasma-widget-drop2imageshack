@@ -35,9 +35,11 @@
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneDragDropEvent>
 #include <QGraphicsSceneResizeEvent>
+#include <QImage>
 #include <QMenu>
 #include <QPixmap>
 #include <QStringList>
+#include <QVariant>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -116,7 +118,7 @@ QList<QAction*> PlasmaIS::contextualActions()
 
 void PlasmaIS::dragEnterEvent(QGraphicsSceneDragDropEvent *e)
 {
-    if ( e->mimeData()->hasFormat("text/plain") ) {
+    if ( e->mimeData()->hasText() || e->mimeData()->hasImage() ) {
         e->accept();
     } else {
         e->ignore();
@@ -125,13 +127,25 @@ void PlasmaIS::dragEnterEvent(QGraphicsSceneDragDropEvent *e)
 
 void PlasmaIS::dropEvent(QGraphicsSceneDragDropEvent *e)
 {
-    QString addr = e->mimeData()->text();
-    addr.replace("file://", "");
-    if ( !is_valid_file(addr) ) {
-        notify_error( i18n("'%1' is invalid image file").arg(addr) );
+    if ( e->mimeData()->hasImage() ) {
+        QImage img = qvariant_cast<QImage>(e->mimeData()->imageData());
+        m_tmpscr = "/tmp/plasma-drop2imageshack" + QString::number(qrand()) + ".png";
+        if ( img.save(m_tmpscr) ) {
+            upload(m_tmpscr);
+        } else {
+            notify_error( i18n("Image save failed") );
+        }
         return;
     }
-    upload(addr);
+    if ( e->mimeData()->hasText() ) {
+        QString addr = e->mimeData()->text();
+        addr.replace("file://", "");
+        if ( !is_valid_file(addr) ) {
+            notify_error( i18n("'%1' is invalid image file").arg(addr) );
+            return;
+        }
+        upload(addr);
+    }
 }
 
 void PlasmaIS::resizeEvent(QGraphicsSceneResizeEvent *e)
