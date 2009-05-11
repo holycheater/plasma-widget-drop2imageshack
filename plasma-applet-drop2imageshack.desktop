@@ -9,8 +9,8 @@ X-KDE-Library=plasma_applet_drop2imageshack
 X-KDE-PluginInfo-Author=Alexander Saltykov
 X-KDE-PluginInfo-Email=holy.cheater@gmail.com
 X-KDE-PluginInfo-Name=drop2imageshack
-X-KDE-PluginInfo-Version=0.1
-X-KDE-PluginInfo-Website=
+X-KDE-PluginInfo-Version=0.5.1
+X-KDE-PluginInfo-Website=http://www.kde-look.org/content/show.php?content=104592
 X-KDE-PluginInfo-Category=File Sharing
 X-KDE-PluginInfo-Depends=
 X-KDE-PluginInfo-License=GPL
