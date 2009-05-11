@@ -20,5 +20,5 @@ install(TARGETS plasma_applet_drop2imageshack
     DESTINATION ${PLUGIN_INSTALL_DIR})
 install(FILES plasma-applet-drop2imageshack.desktop
     DESTINATION ${SERVICES_INSTALL_DIR})
-install(FILES plasma-drop2imageshack.notifyrc
-    DESTINATION ${DATA_INSTALL_DIR}/plasma-drop2imageshack)
+install(FILES plasma-applet-drop2imageshack.notifyrc
+    DESTINATION ${DATA_INSTALL_DIR}/plasma-applet-drop2imageshack)
