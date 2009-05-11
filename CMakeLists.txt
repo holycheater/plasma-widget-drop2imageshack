@@ -1,5 +1,7 @@
 project(plasma-drop2imageshack)
 
+cmake_minimum_required(VERSION 2.6)
+
 find_package(KDE4 REQUIRED)
 find_package(CURL REQUIRED)
 include(KDE4Defaults)
