@@ -88,7 +88,6 @@ PlasmaIS::~PlasmaIS()
     delete m_ha;
     delete m_hm;
     delete m_icon;
-    delete m_notify;
     delete m_uploader;
 }
 
@@ -207,7 +206,6 @@ void PlasmaIS::slotImageUploaded(const QString& url)
     m_hm->addAction(url);
     m_ha->setEnabled(true);
 
-    delete m_notify; // FIXME: KDE hides persistent notifications and doesn't clean the memory.
     m_notify = new KNotification("image-link", 0, KNotification::Persistent);
     m_notify->setActions( QStringList(i18n("Open Browser")) );
     m_notify->setComponentData( KComponentData("plasma-drop2imageshack",
