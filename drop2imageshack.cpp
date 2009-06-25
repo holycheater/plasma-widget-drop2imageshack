@@ -66,8 +66,7 @@ PlasmaIS::PlasmaIS(QObject *parent, const QVariantList& args)
     : Plasma::Applet(parent, args),
     m_icon(0),
     m_label(0),
-    m_uploader(0),
-    m_notify(0)
+    m_uploader(0)
 {
     setAcceptDrops(true);
     setAspectRatioMode(Plasma::ConstrainedSquare);
@@ -206,17 +205,17 @@ void PlasmaIS::slotImageUploaded(const QString& url)
     m_hm->addAction(url);
     m_ha->setEnabled(true);
 
-    m_notify = new KNotification("image-link", 0, KNotification::Persistent);
-    m_notify->setActions( QStringList(i18n("Open Browser")) );
-    m_notify->setComponentData( KComponentData("plasma-drop2imageshack",
-                                               "plasma-drop2imageshack",
+    KNotification *notify = new KNotification("image-link", 0, KNotification::Persistent);
+    notify->setActions( QStringList(i18n("Open Browser")) );
+    notify->setComponentData( KComponentData("plasma-applet-drop2imageshack",
+                                               "plasma-applet-drop2imageshack",
                                                KComponentData::SkipMainComponentRegistration) );
-    connect( m_notify, SIGNAL(action1Activated()),
+    connect( notify, SIGNAL(action1Activated()),
              SLOT(slotOpenUrl()) );
-    m_notify->setText( i18n("Upload success: %1").arg(url) +
+    notify->setText( i18n("Upload success: %1").arg(url) +
                        QString(QChar::ParagraphSeparator) +
                        i18n("URL was copied to clipboard") );
-    m_notify->sendEvent();
+    notify->sendEvent();
 }
 
 void PlasmaIS::slotUploaderFinished()
@@ -235,8 +234,6 @@ void PlasmaIS::slotUploaderFinished()
 
 void PlasmaIS::slotOpenUrl()
 {
-    m_notify->close();
-    m_notify = 0;
     new KRun(KUrl(m_lasturl), 0);
 }
 

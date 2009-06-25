@@ -27,7 +27,6 @@ namespace Plasma {
     class IconWidget;
 }
 class ImageUploader;
-class KNotification;
 class ProgressLabel;
 
 class PlasmaIS : public Plasma::Applet
@@ -60,7 +59,6 @@ class PlasmaIS : public Plasma::Applet
         ProgressLabel *m_label;
 
         ImageUploader *m_uploader;
-        KNotification *m_notify;
 
         QString m_tmpscr;
         QString m_lasturl;
