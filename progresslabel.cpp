@@ -87,7 +87,7 @@ void ProgressLabel::init_paint_options()
     m_font = KGlobalSettings::generalFont();
     m_font.setWeight(QFont::Bold);
     m_font.setBold(true);
-    m_font.setPixelSize( qMax(size().width() / 5, 1.0) );
+    m_font.setPixelSize( qMax(size().width() / 5, qreal(1.0)) );
 
     m_textColor = Plasma::Theme::defaultTheme()->color(Plasma::Theme::TextColor);
     m_boxColor = Plasma::Theme::defaultTheme()->color(Plasma::Theme::BackgroundColor);
